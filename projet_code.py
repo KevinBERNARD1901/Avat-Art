@@ -41,3 +41,5 @@ while running:
                 x, y, z = position.x, position.y, position.z
                 print(x, y, z)
                 draw_body(ecran, joints)
+
+# Test de commentaire de daminus
