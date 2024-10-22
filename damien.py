@@ -1,4 +1,4 @@
-# Ceci est la page du projet
+# Ceci est la page de Daminus
 
 from pykinect2 import PyKinectV2
 from pykinect2 import PyKinectRuntime
@@ -43,5 +43,3 @@ while running:
                 x, y, z = position.x, position.y, position.z
                 print(x, y, z)
                 draw_body(ecran, joints)
-
-# Test de commentaire de daminus
