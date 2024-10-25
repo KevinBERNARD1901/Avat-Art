@@ -1,45 +1,46 @@
-# Ceci est la page de Kévin le boss
-
-from pykinect2 import PyKinectV2
-from pykinect2 import PyKinectRuntime
+# Test
+import sys
+from pykinect2 import PyKinectV2, PyKinectRuntime
 import pygame
+import cv2  # Nécessaire pour redimensionner l'image
 
-# Initialisation de la kinect
-kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color)
-
-# Initialisation de pygame
+# Initialisation de Pygame
 pygame.init()
-ecran_width, ecran_height = 960, 540
-ecran = pygame.display.set_mode((ecran_width, ecran_height))
 
-# Fonction pour dessiner un squelette
-def draw_body(ecran, joints):
-    for joint in joints:
-        position = joints[joint].Position
-        x, y, z = position.x, position.y, position.z
-        if z > 0:
-            x, y = int(x * 100 + ecran_width // 2), int(-y * 100 + ecran_height // 2)
-            pygame.draw.circle(ecran, (255, 0, 0), (x, y), 5)
+# Dimensions de la fenêtre réduite (par exemple, moitié de la résolution native du Kinect)
+width, height = 960, 540
+screen = pygame.display.set_mode((width, height))
+
+# Initialisation du Kinect
+kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
+
+print("Initialisation du Kinect...")
 
 # Boucle principale
 running = True
+print("Début de la boucle principale...")
 while running:
+    # Gestion des événements Pygame
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
     
-    # Récupération des données de la kinect
-    if kinect.has_new_body_frame():
-        bodies = kinect.get_last_body_frame()
-        if bodies != None:
-            for i in range(0, kinect.max_body_count):
-                body = bodies.bodies[i]
-                if not body.is_tracked:
-                    continue
-                joints = body.joints
-                # Récupération de la position du poignet gauche
-                joint = joints[PyKinectV2.JointType_WristLeft]
-                position = joint.Position
-                x, y, z = position.x, position.y, position.z
-                print(x, y, z)
-                draw_body(ecran, joints)
+    # Afficher la vidéo du Kinect
+    if kinect.has_new_color_frame():
+        frame = kinect.get_last_color_frame()
+        
+        if frame is not None:
+            # Redimensionnement et transformation de l'image
+            frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
+            frame = frame[:, :, :3]  # Supprimer le canal alpha
+            frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
+            frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
+            
+            # Afficher le frame redimensionné
+            screen.blit(frame, (0, 0))
+            pygame.display.flip()  # Mettre à jour l'affichage
+
+# Nettoyer
+pygame.quit()
+kinect.close()
+sys.exit()
