@@ -47,7 +47,7 @@ while running:
                     continue
                 joints = body.joints
 
-                # !!!!!! Manque une condition avec la main gauche fermée !!!!!!
+                # Manque une condition sur la main fermée !!!!!!!
 
                 # Récupération de la position de toutes les jointures
                 for i in range(len(joints)):
