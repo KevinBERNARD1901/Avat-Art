@@ -21,6 +21,15 @@ def draw_body(ecran, joints):
             x, y = int(x * 100 + ecran_width // 2), int(-y * 100 + ecran_height // 2)
             pygame.draw.circle(ecran, (255, 0, 0), (x, y), 5)
 
+# Ouverture du fichier (avec l'aide de monsieur GPT parceque vraiment trop à la bourre)
+import openpyxl
+chemin_fichier_excel = "" # A REMPLIR !!!
+classeur = openpyxl.load_workbook(chemin_fichier_excel)
+feuille = classeur["Acquisition"]
+ligne_acquisiton = 3 # A implémenter de 3 à chaque acquisition
+Nb_acquisition_faite = 0 # A implémenter de 1 à chaque acquisition
+
+
 # Boucle principale
 running = True
 while running:
@@ -37,9 +46,31 @@ while running:
                 if not body.is_tracked:
                     continue
                 joints = body.joints
-                # Récupération de la position du poignet gauche
-                joint = joints[PyKinectV2.JointType_WristLeft]
-                position = joint.Position
-                x, y, z = position.x, position.y, position.z
-                print(x, y, z)
-                draw_body(ecran, joints)
+
+                # !!!!!! Manque une condition avec la main gauche fermée !!!!!!
+
+                # Récupération de la position de toutes les jointures
+                for i in range(len(joints)):
+
+                    #Récupération
+                    joint = joints[i] # Fonctionne ???
+                    position = joint.Position
+                    x, y, z = position.x, position.y, position.z
+
+                    # Remplissage excel
+                    feuille.cell(row=ligne_acquisiton,column=i+3, value=x)
+                    feuille.cell(row=ligne_acquisiton+1,column=i+3, value=y)
+                    feuille.cell(row=ligne_acquisiton+2,column=i+3, value=z)
+
+                    #Mise à jour des variable de navigation dans l'excel
+                    ligne_acquisiton += 3
+                    Nb_acquisition_faite += 1
+
+                    if Nb_acquisition_faite > 100:
+                        running = False
+
+                    draw_body(ecran, joints)
+
+# Enregistrement
+classeur.save(chemin_fichier_excel)
+print("Modification enregistrée avec succès !")
