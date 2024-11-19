@@ -89,14 +89,14 @@ import openpyxl
 import time
 
 # Initialisation de la kinect
-kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color) # Classe particulière
+kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color) # Classe particulière, on récupère le squelette bâton et les couleurs des données du SDK (de la Kinect) grâce à PyKinectV2
 
 # Initialisation de pygame
 pygame.init()
 width, height = 960, 540
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((width, height)) # taille de l'écran qui s'affiche quand on execute le programme
 
-# Fonction pour dessiner un squelette
+# Fonction pour dessiner un squelette non utilisée
 def draw_body(screen, joints):
     for joint in joints:
         print(type(joints))
@@ -116,20 +116,19 @@ Nb_acquisition_faite = 0 # A implémenter de 1 à chaque acquisition
 Nb_acquisition_a_faire = 100
 Nb_joints = 25
 
-
 # Boucle principale
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running = False # si on clique sur la croix rouge, on quitte et on arrête le programme
     
     # Récupération des données de la kinect
     if kinect.has_new_body_frame():
         bodies = kinect.get_last_body_frame() # Liste des corps.
         if bodies != None:
             for i in range(0, kinect.max_body_count):
-                body = bodies.bodies[i] # Chaque corps possède 2 attributs : un booléen (is_tracked) et un dictionnaire nommé joints contenants les jointures.
+                body = bodies.bodies[i] # Chaque corps body i est une classe comprenant 2 attributs : un booléen (is_tracked) et une bibliothèque (joints) qui contient les jointures.
                 if not body.is_tracked: # A quoi sert cette ligne : Elle permet de ne pas continuer le code si le corps détecté n'est pas traqué.
                     continue
                 joints = body.joints
@@ -166,7 +165,7 @@ while running:
                     # draw_body(screen, joints)
                     # pygame.display.flip()
                         
-        if kinect.has_new_color_frame():
+        if kinect.has_new_color_frame(): # permet de renouveler en permanence les images affichées sur l'écran (comme un film)
             frame = kinect.get_last_color_frame()
             
             if frame is not None:
