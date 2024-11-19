@@ -1,190 +1,146 @@
-from pykinect2 import PyKinectV2
-from pykinect2 import PyKinectRuntime
 import cv2
-import pygame
-import openpyxl
-import time
 
-# Initialisation de la kinect
-kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color)
+animation_path = "./Animations/Animation_vague_beta.mp4"
 
-# Initialisation de pygame
-pygame.init()
-width, height = 960, 540
-screen = pygame.display.set_mode((width, height))
+cap = cv2.VideoCapture(animation_path)
 
-# Fonction pour dessiner un squelette
-def draw_body(screen, joints):
-    for joint in joints:
-        print(type(joints))
-        print("je suis là")
-        position = joints[joint].Position
-        x, y, z = position.x, position.y, position.z
-        if z > 0:
-            x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
-            pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
+if not cap.isOpened():
+    raise Exception("ERROR: Video could not be opened")
 
-# Ouverture du fichier (avec l'aide de monsieur GPT parceque vraiment trop à la bourre)
-chemin_fichier_excel = "Acquisition_mouvement.xlsx" # A REMPLIR !!!
-classeur = openpyxl.load_workbook(chemin_fichier_excel)
-feuille = classeur["Acquisition"]
-ligne_acquisiton = 3 # A implémenter de 3 à chaque acquisition
-Nb_acquisition_faite = 0 # A implémenter de 1 à chaque acquisition
-Nb_acquisition_a_faire = 100
-Nb_joints = 25
+fps = 7 # J'ai 7 image par seconde dans l'animation
+delay = int(1000/fps)
 
+cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
+cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-# Boucle principale
+screen_width = 1920
+screen_height = 1080
+
 running = True
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    success, frame = cap.read()
+
+    if not success:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        # running = False
+        continue
+
+    screen = cv2.resize(frame, (screen_width, screen_height), interpolation=cv2.INTER_LINEAR)
     
-    # Récupération des données de la kinect
-    if kinect.has_new_body_frame():
-        bodies = kinect.get_last_body_frame()
-        if bodies != None:
-            for i in range(0, kinect.max_body_count):
-                body = bodies.bodies[i]
-                if not body.is_tracked:
-                    continue
-                joints = body.joints
-                
-                if (Nb_acquisition_faite < Nb_acquisition_a_faire):
-                    # Récupération de la position de toutes les jointures
-                    if body.hand_right_state == PyKinectV2.HandState_Closed and body.hand_left_state == PyKinectV2.HandState_Closed:
-                        print("Mains fermées")
-                        for i in range(Nb_joints):
-                            x=joints[i].Position.x
-                            y=joints[i].Position.y
-                            z=joints[i].Position.z
-                            # Print des coordonnées de la jointure
-                            print("X=", x)
-                            print("Y=", y)
-                            print("Z=", z)
+    cv2.imshow("Frame", frame)
 
-                            # Remplissage excel
-                            feuille.cell(row=ligne_acquisiton,column=i+3, value=x)
-                            feuille.cell(row=ligne_acquisiton+1,column=i+3, value=y)
-                            feuille.cell(row=ligne_acquisiton+2,column=i+3, value=z)
+    if cv2.waitKey(delay) & 0xFF == ord('q'):
+        running = False
 
-                        #Mise à jour des variable de navigation dans l'excel
-                        Nb_acquisition_faite += 1
-                        print("Acquisition n°", Nb_acquisition_faite)
-                        ligne_acquisiton += 3
-                        
-                        # Faire attendre pour éviter de prendre plusieurs fois la même acquisition
-                        time.sleep(1)
+cap.release()
+cv2.destroyAllWindows()
 
-                else:
-                    running = False
-
-                    # draw_body(screen, joints)
-                    # pygame.display.flip()
-                        
-        if kinect.has_new_color_frame():
-            frame = kinect.get_last_color_frame()
-            
-            if frame is not None:
-                # Redimensionnement et transformation de l'image
-                frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
-                frame = frame[:, :, :3]  # Supprimer le canal alpha
-                frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
-                frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
-                
-                # Afficher le frame redimensionné
-                screen.blit(frame, (0, 0))
-                pygame.display.flip()  # Mettre à jour l'affichage
-
-# Nettoyer
-pygame.quit()
-kinect.close()
-
-# Enregistrement
-classeur.save(chemin_fichier_excel)
-print("Modification enregistrée avec succès !")
-
-# # Test
-# import sys
-# from pykinect2 import PyKinectV2, PyKinectRuntime
+# from pykinect2 import PyKinectV2
+# from pykinect2 import PyKinectRuntime
+# import cv2
 # import pygame
-# import cv2  # Nécessaire pour redimensionner l'image
-# import pandas as pd
+# import openpyxl
+# import time
 
-# # Initialisation de Pygame
+# # Initialisation de la kinect
+# kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color)
+
+# # Initialisation de pygame
 # pygame.init()
-
-# # Dimensions de la fenêtre réduite (par exemple, moitié de la résolution native du Kinect)
 # width, height = 960, 540
 # screen = pygame.display.set_mode((width, height))
 
-# # Stockage des données
-# hand_left_positions = []
+# # Fonction pour dessiner un squelette
+# def draw_body(screen, joints):
+#     for joint in joints:
+#         print(type(joints))
+#         print("je suis là")
+#         position = joints[joint].Position
+#         x, y, z = position.x, position.y, position.z
+#         if z > 0:
+#             x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
+#             pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
 
-# # Initialisation du Kinect
-# kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Body)
+# # Ouverture du fichier (avec l'aide de monsieur GPT parceque vraiment trop à la bourre)
+# chemin_fichier_excel = "Acquisition_mouvement.xlsx" # A REMPLIR !!!
+# classeur = openpyxl.load_workbook(chemin_fichier_excel)
+# feuille = classeur["Acquisition"]
+# ligne_acquisiton = 3 # A implémenter de 3 à chaque acquisition
+# Nb_acquisition_faite = 0 # A implémenter de 1 à chaque acquisition
+# Nb_acquisition_a_faire = 100
+# Nb_joints = 25
 
-# print("Initialisation du Kinect...")
 
 # # Boucle principale
 # running = True
-# print("Début de la boucle principale...")
 # while running:
-#     # Gestion des événements Pygame
 #     for event in pygame.event.get():
 #         if event.type == pygame.QUIT:
 #             running = False
     
-#     # Afficher le squelette bâton
+#     # Récupération des données de la kinect
 #     if kinect.has_new_body_frame():
 #         bodies = kinect.get_last_body_frame()
-        
-#         if bodies is not None:
+#         if bodies != None:
 #             for i in range(0, kinect.max_body_count):
 #                 body = bodies.bodies[i]
 #                 if not body.is_tracked:
 #                     continue
-                
 #                 joints = body.joints
-#                 # Récupération des données seulement si la main est fermée
-#                 if (body.hand_right_state == PyKinectV2.HandState_Closed & body.hand_left_state == PyKinectV2.HandState_Closed):
-#                     x=joints[PyKinectV2.JointType_HandLeft].Position.x,
-#                     y=joints[PyKinectV2.JointType_HandLeft].Position.y,
-#                     z=joints[PyKinectV2.JointType_HandLeft].Position.z
-#                     # Print des coordonnées de la main gauche
-#                     print("Main gauche: x={}, y={}, z={}".format(x, y, z))
-#                     # Écriture des coordonnées dans le fichier CSV
-#                     hand_left_positions.append([x, y, z])
-    
-#     # Afficher la vidéo du Kinect
-#     if kinect.has_new_color_frame():
-#         frame = kinect.get_last_color_frame()
-        
-#         if frame is not None:
-#             # Redimensionnement et transformation de l'image
-#             frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
-#             frame = frame[:, :, :3]  # Supprimer le canal alpha
-#             frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
-#             frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
+                
+#                 if (Nb_acquisition_faite < Nb_acquisition_a_faire):
+#                     # Récupération de la position de toutes les jointures
+#                     if body.hand_right_state == PyKinectV2.HandState_Closed and body.hand_left_state == PyKinectV2.HandState_Closed:
+#                         print("Mains fermées")
+#                         for i in range(Nb_joints):
+#                             x=joints[i].Position.x
+#                             y=joints[i].Position.y
+#                             z=joints[i].Position.z
+#                             # Print des coordonnées de la jointure
+#                             print("X=", x)
+#                             print("Y=", y)
+#                             print("Z=", z)
+
+#                             # Remplissage excel
+#                             feuille.cell(row=ligne_acquisiton,column=i+3, value=x)
+#                             feuille.cell(row=ligne_acquisiton+1,column=i+3, value=y)
+#                             feuille.cell(row=ligne_acquisiton+2,column=i+3, value=z)
+
+#                         #Mise à jour des variable de navigation dans l'excel
+#                         Nb_acquisition_faite += 1
+#                         print("Acquisition n°", Nb_acquisition_faite)
+#                         ligne_acquisiton += 3
+                        
+#                         # Faire attendre pour éviter de prendre plusieurs fois la même acquisition
+#                         time.sleep(1)
+
+#                 else:
+#                     running = False
+
+#                     # draw_body(screen, joints)
+#                     # pygame.display.flip()
+                        
+#         if kinect.has_new_color_frame():
+#             frame = kinect.get_last_color_frame()
             
-#             # Afficher le frame redimensionné
-#             screen.blit(frame, (0, 0))
-#             pygame.display.flip()  # Mettre à jour l'affichage
+#             if frame is not None:
+#                 # Redimensionnement et transformation de l'image
+#                 frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
+#                 frame = frame[:, :, :3]  # Supprimer le canal alpha
+#                 frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
+#                 frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
+                
+#                 # Afficher le frame redimensionné
+#                 screen.blit(frame, (0, 0))
+#                 pygame.display.flip()  # Mettre à jour l'affichage
 
 # # Nettoyer
 # pygame.quit()
 # kinect.close()
-# sys.exit()
 
-# # Créer un DataFrame à partir des données de la main gauche
-# df = pd.DataFrame(hand_left_positions, columns=["x", "y", "z"])
-
-# # Exporter le DataFrame en excel
-# df.to_excel("hand_left_positions.xlsx", index=False)
-
-# print("Coordonnées de la main gauche exportées avec succès !")
-
+# # Enregistrement
+# classeur.save(chemin_fichier_excel)
+# print("Modification enregistrée avec succès !")
 
 # # Connaître la position de toutes les articulations à importer en excel ou en csv
 # # JointType_SpineBase = 0
