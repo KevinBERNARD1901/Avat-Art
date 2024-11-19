@@ -4,6 +4,24 @@ import cv2
 import pygame
 import openpyxl
 import time
+# import numpy as np
+
+# Paramètres de l'animation
+animation_path = "./Animations/Animation_vague_beta.mp4"
+cap = cv2.VideoCapture(animation_path)
+if not cap.isOpened():
+    raise Exception("ERROR: Video could not be opened")
+
+fps = 7 # J'ai 7 image par seconde dans l'animation
+delay = int(1000/fps)
+
+cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
+cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+screen_width = 1920
+screen_height = 1080
+# background_color = (241, 234, 206)
+# canvas = np.full((screen_height, screen_width, 3), background_color, dtype=np.uint8)
+
 
 # Initialisation de la kinect
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color)
@@ -23,11 +41,26 @@ def draw_body(screen, joints):
         if z > 0:
             x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
             pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
+      
+# Fonction pour l'animation du coup de pied     
+def animation_coup_de_pied():
+    running = True
+    while running:
+        success, frame = cap.read()
+
+        if not success:
+            running = False
+            continue
+
+        screen = cv2.resize(frame, (screen_width, screen_height), interpolation=cv2.INTER_LINEAR)
+        
+        cv2.imshow("Frame", frame)
+
+        if cv2.waitKey(delay) & 0xFF == ord('q'):
+            running = False
             
-# Fonction d'affichage test
-def fonction_affichage():
-    for i in range(1000):
-        print(i)
+    cap.release()
+    cv2.destroyAllWindows() 
 
 # Boucle principale
 running = True
@@ -57,9 +90,7 @@ while running:
                 # Test de comparaison
                 if y_pied_droit > y_genoux_gauche : 
                     print("Pied droit plus haut que genou gauche")
-                    # KEVIN !!!!! A REMPLIIIIIIR !!!! Lancer l'animation
-                    fonction_affichage()
-                    print("####################################################")
+                    animation_coup_de_pied()
                     running = False
                     
 
