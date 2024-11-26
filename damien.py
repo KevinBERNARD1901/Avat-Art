@@ -1,41 +1,76 @@
-# Ceci est la page de Daminus
-
 from pykinect2 import PyKinectV2
 from pykinect2 import PyKinectRuntime
+import cv2
 import pygame
+import openpyxl
+import time
+# import numpy as np
+
+# Paramètres des animations
+animation_path_wave = "./Animations/Animation_vague_beta.mp4"
+animation_path_wave_right = "./Animations/Avat'Art_2.mp4"
+
+fps = 7 # J'ai 7 image par seconde dans l'animation
+delay = int(1000/fps)
+
+cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
+cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+screen_width = 1920
+screen_height = 1080
+# background_color = (241, 234, 206)
+# canvas = np.full((screen_height, screen_width, 3), background_color, dtype=np.uint8)
+
 
 # Initialisation de la kinect
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color)
 
 # Initialisation de pygame
 pygame.init()
-ecran_width, ecran_height = 960, 540
-ecran = pygame.display.set_mode((ecran_width, ecran_height))
+width, height = 960, 540
+# screen = pygame.display.set_mode((width, height))
 
 # Fonction pour dessiner un squelette
-def draw_body(ecran, joints):
+def draw_body(screen, joints):
     for joint in joints:
+        print(type(joints))
+        print("je suis là")
         position = joints[joint].Position
         x, y, z = position.x, position.y, position.z
         if z > 0:
-            x, y = int(x * 100 + ecran_width // 2), int(-y * 100 + ecran_height // 2)
-            pygame.draw.circle(ecran, (255, 0, 0), (x, y), 5)
+            x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
+            pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
+      
+# Fonction pour l'animation du coup de pied donne vague   
+def animation_coup_de_pied(animation_path):#path en argument
+    cap = cv2.VideoCapture(animation_path)
+    if not cap.isOpened():
+        raise Exception("ERROR: Video could not be opened")
+    running = True
+    while running:
+        success, frame = cap.read()
 
-# Ouverture du fichier (avec l'aide de monsieur GPT parceque vraiment trop à la bourre)
-import openpyxl
-chemin_fichier_excel = "" # A REMPLIR !!!
-classeur = openpyxl.load_workbook(chemin_fichier_excel)
-feuille = classeur["Acquisition"]
-ligne_acquisiton = 3 # A implémenter de 3 à chaque acquisition
-Nb_acquisition_faite = 0 # A implémenter de 1 à chaque acquisition
+        if not success: #Si on arrive à la fin de la vidéo, on arrête la boucle while
+            running = False
+            continue
 
+        screen = cv2.resize(frame, (screen_width, screen_height), interpolation=cv2.INTER_LINEAR)
+        
+        cv2.imshow("Frame", frame)
+
+        if cv2.waitKey(delay) & 0xFF == ord('q'):#
+            running = False
+            
+    cap.release()
+    cv2.destroyAllWindows() 
 
 # Boucle principale
-running = True
-while running:
+running_loop = True
+running_animation = False
+
+while running_loop:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running_loop = False
     
     # Récupération des données de la kinect
     if kinect.has_new_body_frame():
@@ -46,146 +81,69 @@ while running:
                 if not body.is_tracked:
                     continue
                 joints = body.joints
-
-                # Manque une condition sur la main fermée !!!!!!!
-
-                # Récupération de la position de toutes les jointures
-                for i in range(len(joints)):
-
-                    #Récupération
-                    joint = joints[i] # Fonctionne ???
-                    position = joint.Position
-                    x, y, z = position.x, position.y, position.z
-
-                    # Remplissage excel
-                    feuille.cell(row=ligne_acquisiton,column=i+3, value=x)
-                    feuille.cell(row=ligne_acquisiton+1,column=i+3, value=y)
-                    feuille.cell(row=ligne_acquisiton+2,column=i+3, value=z)
-
-                    #Mise à jour des variable de navigation dans l'excel
-                    ligne_acquisiton += 3
-                    Nb_acquisition_faite += 1
-
-                    if Nb_acquisition_faite > 100:
-                        running = False
-
-                    draw_body(ecran, joints)
-
-# Enregistrement
-classeur.save(chemin_fichier_excel)
-print("Modification enregistrée avec succès !")
-
-
-
-
-################################################################################################################
-# Commentaire avce Clarisse
-
-from pykinect2 import PyKinectV2
-from pykinect2 import PyKinectRuntime
-import cv2
-import pygame
-import openpyxl
-import time
-
-# Initialisation de la kinect
-kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKinectV2.FrameSourceTypes_Color) # Classe particulière, on récupère le squelette bâton et les couleurs des données du SDK (de la Kinect) grâce à PyKinectV2
-
-# Initialisation de pygame
-pygame.init()
-width, height = 960, 540
-screen = pygame.display.set_mode((width, height)) # taille de l'écran qui s'affiche quand on execute le programme
-
-# Fonction pour dessiner un squelette non utilisée
-def draw_body(screen, joints):
-    for joint in joints:
-        print(type(joints))
-        print("je suis là")
-        position = joints[joint].Position
-        x, y, z = position.x, position.y, position.z
-        if z > 0:
-            x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
-            pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
-
-# Ouverture du fichier (avec l'aide de monsieur GPT parceque vraiment trop à la bourre)
-chemin_fichier_excel = "Acquisition_mouvement.xlsx" # A REMPLIR !!!
-classeur = openpyxl.load_workbook(chemin_fichier_excel)
-feuille = classeur["Acquisition"]
-ligne_acquisiton = 3 # A implémenter de 3 à chaque acquisition
-Nb_acquisition_faite = 0 # A implémenter de 1 à chaque acquisition
-Nb_acquisition_a_faire = 100
-Nb_joints = 25
-
-# Boucle principale
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False # si on clique sur la croix rouge, on quitte et on arrête le programme
-    
-    # Récupération des données de la kinect
-    if kinect.has_new_body_frame():
-        bodies = kinect.get_last_body_frame() # Liste des corps.
-        if bodies != None:
-            for i in range(0, kinect.max_body_count):
-                body = bodies.bodies[i] # Chaque corps body i est une classe comprenant 2 attributs : un booléen (is_tracked) et une bibliothèque (joints) qui contient les jointures.
-                if not body.is_tracked: # A quoi sert cette ligne : Elle permet de ne pas continuer le code si le corps détecté n'est pas traqué.
-                    continue
-                joints = body.joints
                 
-                if (Nb_acquisition_faite < Nb_acquisition_a_faire):
-                    # Récupération de la position de toutes les jointures
-                    if body.hand_right_state == PyKinectV2.HandState_Closed and body.hand_left_state == PyKinectV2.HandState_Closed:
-                        print("Mains fermées")
-                        for i in range(Nb_joints):
-                            x=joints[i].Position.x
-                            y=joints[i].Position.y
-                            z=joints[i].Position.z
-                            # Print des coordonnées de la jointure
-                            print("X=", x)
-                            print("Y=", y)
-                            print("Z=", z)
+                # Indice des jointures à tester
+                indice_pied_droit = 19
+                indice_pied_gauche = 15
+                indice_genou_gauche = 13
+                indice_genou_droit = 17
+                indice_epaule_droite = 8
+                indice_coude_droit = 9
+                
+                # Récupération des y
+                y_pied_droit = joints[indice_pied_droit].Position.y
+                y_genou_gauche = joints[indice_genou_gauche].Position.y
+                y_pied_gauche = joints[indice_pied_gauche].Position.y
+                y_genou_droit = joints[indice_genou_droit].Position.y
+                y_epaule_droite = joints[indice_epaule_droite].Position.y
+                y_coude_droit = joints[indice_coude_droit].Position.y
+                y_cou = joints[2].Position.y
+                y_tete = joints[3].Position.y
+                y_poing_droit = joints[11].Position.y
+                x_coude_droit = joints[9].Position.x
+                x_poing_droit = joints[11].Position.x
+                
+                
+                # Calcul de seuil
+                seuil = abs(y_cou-y_tete)*0.1/1.16
+                
+                # Test de comparaison coup de pied droit
+                if y_pied_droit > y_genou_gauche : 
+                    print("Pied droit plus haut que genou gauche")
+                    animation_coup_de_pied(animation_path_wave_right)
+                    running_loop = False
+                    
+                # Test de comparaison coup de pied gauche 
+                if y_pied_gauche > y_genou_droit : 
+                    print("Pied gauche plus haut que genou droit")
+                    animation_coup_de_pied(animation_path_wave)
+                    running_loop = False
+                
+                #Test coup de poing droit
+                if y_epaule_droite<y_poing_droit < y_tete and y_coude_droit>y_epaule_droite and x_poing_droit>x_coude_droit:
+                    print("coup de poing droit")
+                    animation_coup_de_pied(animation_path_wave_right)
+                    running_loop = False
+                    
 
-                            # Remplissage excel
-                            feuille.cell(row=ligne_acquisiton,column=i+3, value=x)
-                            feuille.cell(row=ligne_acquisiton+1,column=i+3, value=y)
-                            feuille.cell(row=ligne_acquisiton+2,column=i+3, value=z)
-
-                        #Mise à jour des variable de navigation dans l'excel
-                        Nb_acquisition_faite += 1
-                        print("Acquisition n°", Nb_acquisition_faite)
-                        ligne_acquisiton += 3
-                        
-                        # Faire attendre pour éviter de prendre plusieurs fois la même acquisition
-                        time.sleep(1) # Une seconde
-
-                else:
-                    running = False
-
-                    # draw_body(screen, joints)
-                    # pygame.display.flip()
-                        
-        if kinect.has_new_color_frame(): # permet de renouveler en permanence les images affichées sur l'écran (comme un film)
+        if kinect.has_new_color_frame():
             frame = kinect.get_last_color_frame()
             
-            if frame is not None:
-                # Redimensionnement et transformation de l'image
-                frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
-                frame = frame[:, :, :3]  # Supprimer le canal alpha
-                frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
-                frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
+            # if frame is not None:
+            #     # Redimensionnement et transformation de l'image
+            #     frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
+            #     frame = frame[:, :, :3]  # Supprimer le canal alpha
+            #     frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
+            #     frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
                 
-                # Afficher le frame redimensionné
-                screen.blit(frame, (0, 0))
-                pygame.display.flip()  # Mettre à jour l'affichage
+            #     # Afficher le frame redimensionné
+            #     screen.blit(frame, (0, 0))
+            #     pygame.display.flip()  # Mettre à jour l'affichage
 
 # Nettoyer
 pygame.quit()
 kinect.close()
 
-# Enregistrement
-classeur.save(chemin_fichier_excel)
-print("Modification enregistrée avec succès !")
 
 # # Test
 # import sys

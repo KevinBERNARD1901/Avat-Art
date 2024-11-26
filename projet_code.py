@@ -43,12 +43,12 @@ def draw_body(screen, joints):
             pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
       
 # Fonction pour l'animation du coup de pied     
-def animation_coup_de_pied():
+def animation_coup_de_pied():#path en argument
     running = True
     while running:
         success, frame = cap.read()
 
-        if not success:
+        if not success: #Si on arrive à la fin de la vidéo, on arrête la boucle while
             running = False
             continue
 
