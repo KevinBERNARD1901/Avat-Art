@@ -7,10 +7,10 @@ import time
 # import numpy as np
 
 # Paramètres des animations
-animation_path_wave = "./Animations/Animation_vague_beta.mp4"
-animation_path_wave_right = "./Animations/Avat'Art_2.mp4"
+animation_path_wave = "./Animations/Animation_vague_gauche.mp4"
+animation_path_wave_right = "./Animations/Animation_vague_droite.mp4"
 
-fps = 7 # J'ai 7 image par seconde dans l'animation
+fps = 16 # J'ai 10 images par seconde dans l'animation
 delay = int(1000/fps)
 
 cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
@@ -61,7 +61,6 @@ def animation_coup_de_pied(animation_path):#path en argument
             running = False
             
     cap.release()
-    cv2.destroyAllWindows() 
 
 # Boucle principale
 running_loop = True
@@ -110,20 +109,20 @@ while running_loop:
                 # Test de comparaison coup de pied droit
                 if y_pied_droit > y_genou_gauche : 
                     print("Pied droit plus haut que genou gauche")
-                    animation_coup_de_pied(animation_path_wave_right)
-                    running_loop = False
+                    animation_coup_de_pied(animation_path_wave)
+                    # running_loop = False
                     
                 # Test de comparaison coup de pied gauche 
                 if y_pied_gauche > y_genou_droit : 
                     print("Pied gauche plus haut que genou droit")
-                    animation_coup_de_pied(animation_path_wave)
-                    running_loop = False
+                    animation_coup_de_pied(animation_path_wave_right)
+                    # running_loop = False
                 
                 #Test coup de poing droit
                 if y_epaule_droite<y_poing_droit < y_tete and y_coude_droit>y_epaule_droite and x_poing_droit>x_coude_droit:
                     print("coup de poing droit")
-                    animation_coup_de_pied(animation_path_wave_right)
-                    running_loop = False
+                    animation_coup_de_pied(animation_path_wave)
+                    # running_loop = False
                     
 
         if kinect.has_new_color_frame():

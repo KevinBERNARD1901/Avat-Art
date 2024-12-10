@@ -6,13 +6,11 @@ import openpyxl
 import time
 # import numpy as np
 
-# Paramètres de l'animation
-animation_path = "./Animations/Animation_vague_beta.mp4"
-cap = cv2.VideoCapture(animation_path)
-if not cap.isOpened():
-    raise Exception("ERROR: Video could not be opened")
+# Paramètres des animations
+animation_path_wave = "./Animations/Animation_vague_gauche.mp4"
+animation_path_wave_right = "./Animations/Animation_vague_droite.mp4"
 
-fps = 7 # J'ai 7 image par seconde dans l'animation
+fps = 16 # J'ai 10 images par seconde dans l'animation
 delay = int(1000/fps)
 
 cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
@@ -29,7 +27,7 @@ kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Body | PyKi
 # Initialisation de pygame
 pygame.init()
 width, height = 960, 540
-screen = pygame.display.set_mode((width, height))
+# screen = pygame.display.set_mode((width, height))
 
 # Fonction pour dessiner un squelette
 def draw_body(screen, joints):
@@ -42,8 +40,11 @@ def draw_body(screen, joints):
             x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
             pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
       
-# Fonction pour l'animation du coup de pied     
-def animation_coup_de_pied():#path en argument
+# Fonction pour l'animation du coup de pied donne vague   
+def animation_coup_de_pied(animation_path):#path en argument
+    cap = cv2.VideoCapture(animation_path)
+    if not cap.isOpened():
+        raise Exception("ERROR: Video could not be opened")
     running = True
     while running:
         success, frame = cap.read()
@@ -56,18 +57,19 @@ def animation_coup_de_pied():#path en argument
         
         cv2.imshow("Frame", frame)
 
-        if cv2.waitKey(delay) & 0xFF == ord('q'):
+        if cv2.waitKey(delay) & 0xFF == ord('q'):#
             running = False
             
     cap.release()
-    cv2.destroyAllWindows() 
 
 # Boucle principale
-running = True
-while running:
+running_loop = True
+running_animation = False
+
+while running_loop:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running_loop = False
     
     # Récupération des données de la kinect
     if kinect.has_new_body_frame():
@@ -81,32 +83,61 @@ while running:
                 
                 # Indice des jointures à tester
                 indice_pied_droit = 19
-                indice_genoux_gauche = 13
+                indice_pied_gauche = 15
+                indice_genou_gauche = 13
+                indice_genou_droit = 17
+                indice_epaule_droite = 8
+                indice_coude_droit = 9
                 
                 # Récupération des y
                 y_pied_droit = joints[indice_pied_droit].Position.y
-                y_genoux_gauche = joints[indice_genoux_gauche].Position.y
+                y_genou_gauche = joints[indice_genou_gauche].Position.y
+                y_pied_gauche = joints[indice_pied_gauche].Position.y
+                y_genou_droit = joints[indice_genou_droit].Position.y
+                y_epaule_droite = joints[indice_epaule_droite].Position.y
+                y_coude_droit = joints[indice_coude_droit].Position.y
+                y_cou = joints[2].Position.y
+                y_tete = joints[3].Position.y
+                y_poing_droit = joints[11].Position.y
+                x_coude_droit = joints[9].Position.x
+                x_poing_droit = joints[11].Position.x
                 
-                # Test de comparaison
-                if y_pied_droit > y_genoux_gauche : 
+                
+                # Calcul de seuil
+                seuil = abs(y_cou-y_tete)*0.1/1.16
+                
+                # Test de comparaison coup de pied droit
+                if y_pied_droit > y_genou_gauche : 
                     print("Pied droit plus haut que genou gauche")
-                    animation_coup_de_pied()
-                    running = False
+                    animation_coup_de_pied(animation_path_wave)
+                    # running_loop = False
+                    
+                # Test de comparaison coup de pied gauche 
+                if y_pied_gauche > y_genou_droit : 
+                    print("Pied gauche plus haut que genou droit")
+                    animation_coup_de_pied(animation_path_wave_right)
+                    # running_loop = False
+                
+                #Test coup de poing droit
+                if y_epaule_droite<y_poing_droit < y_tete and y_coude_droit>y_epaule_droite and x_poing_droit>x_coude_droit:
+                    print("coup de poing droit")
+                    animation_coup_de_pied(animation_path_wave)
+                    # running_loop = False
                     
 
         if kinect.has_new_color_frame():
             frame = kinect.get_last_color_frame()
             
-            if frame is not None:
-                # Redimensionnement et transformation de l'image
-                frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
-                frame = frame[:, :, :3]  # Supprimer le canal alpha
-                frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
-                frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
+            # if frame is not None:
+            #     # Redimensionnement et transformation de l'image
+            #     frame = frame.reshape((1080, 1920, 4))  # Reshape du frame pour 1080p
+            #     frame = frame[:, :, :3]  # Supprimer le canal alpha
+            #     frame = cv2.resize(frame, (width, height))  # Redimensionner avec OpenCV
+            #     frame = pygame.surfarray.make_surface(frame.swapaxes(0, 1))  # Créer une surface Pygame
                 
-                # Afficher le frame redimensionné
-                screen.blit(frame, (0, 0))
-                pygame.display.flip()  # Mettre à jour l'affichage
+            #     # Afficher le frame redimensionné
+            #     screen.blit(frame, (0, 0))
+            #     pygame.display.flip()  # Mettre à jour l'affichage
 
 # Nettoyer
 pygame.quit()
