@@ -10,6 +10,7 @@ import time
 animation_path_wave = "./Animations/Animation_vague_gauche.mp4"
 animation_path_wave_right = "./Animations/Animation_vague_droite.mp4"
 
+
 fps = 16 # J'ai 10 images par seconde dans l'animation
 delay = int(1000/fps)
 
@@ -41,7 +42,7 @@ def draw_body(screen, joints):
             pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
       
 # Fonction pour l'animation du coup de pied donne vague   
-def animation_coup_de_pied(animation_path):#path en argument
+def animation_coup(animation_path):#path en argument
     cap = cv2.VideoCapture(animation_path)
     if not cap.isOpened():
         raise Exception("ERROR: Video could not be opened")
@@ -65,6 +66,7 @@ def animation_coup_de_pied(animation_path):#path en argument
 # Boucle principale
 running_loop = True
 running_animation = False
+liste_position=[]
 
 while running_loop:
     for event in pygame.event.get():
@@ -88,41 +90,37 @@ while running_loop:
                 indice_genou_droit = 17
                 indice_epaule_droite = 8
                 indice_coude_droit = 9
+                indice_tete = 3
+                indice_poing_droit = 11
+                indice_poing_gauche = 7
                 
-                # Récupération des y
-                y_pied_droit = joints[indice_pied_droit].Position.y
-                y_genou_gauche = joints[indice_genou_gauche].Position.y
-                y_pied_gauche = joints[indice_pied_gauche].Position.y
-                y_genou_droit = joints[indice_genou_droit].Position.y
-                y_epaule_droite = joints[indice_epaule_droite].Position.y
-                y_coude_droit = joints[indice_coude_droit].Position.y
-                y_cou = joints[2].Position.y
-                y_tete = joints[3].Position.y
-                y_poing_droit = joints[11].Position.y
-                x_coude_droit = joints[9].Position.x
-                x_poing_droit = joints[11].Position.x
-                
-                
+                # Récupération des positions
+                for i in range(25):
+                    liste_position.append([joints[i].Position.x, joints[i].Position.y, joints[i].Position.z])
+
                 # Calcul de seuil
                 seuil = abs(y_cou-y_tete)*0.1/1.16
                 
                 # Test de comparaison coup de pied droit
-                if y_pied_droit > y_genou_gauche : 
+                if liste_position[indice_pied_droit[1]] > liste_position[indice_genou_gauche[1]] : 
                     print("Pied droit plus haut que genou gauche")
-                    animation_coup_de_pied(animation_path_wave)
+                    animation_coup(animation_path_wave)
                     # running_loop = False
                     
                 # Test de comparaison coup de pied gauche 
-                if y_pied_gauche > y_genou_droit : 
+                if liste_position[indice_pied_gauche[1]]> liste_position[indice_genou_droit[1]] : 
                     print("Pied gauche plus haut que genou droit")
-                    animation_coup_de_pied(animation_path_wave_right)
+                    animation_coup(animation_path_wave_right)
                     # running_loop = False
                 
                 #Test coup de poing droit
-                if y_epaule_droite<y_poing_droit < y_tete and y_coude_droit>y_epaule_droite and x_poing_droit>x_coude_droit:
+                if liste_position[indice_epaule_droite[1]] < liste_position[indice_poing_droit[1]] < liste_position[indice_tete[1]] and liste_position[indice_coude_droit[1]] > liste_position[indice_epaule_droite[1]] and liste_position[indice_poing_droit[0]] > liste_position[indice_coude_droit[0]]:
                     print("coup de poing droit")
-                    animation_coup_de_pied(animation_path_wave)
+                    animation_coup(animation_path_aura)
                     # running_loop = False
+                
+                #Test aura d'énergie
+                
                     
 
         if kinect.has_new_color_frame():
@@ -142,6 +140,7 @@ while running_loop:
 # Nettoyer
 pygame.quit()
 kinect.close()
+
 
 
 # # Test
