@@ -1,3 +1,7 @@
+# Idée gestion des enchainemnts
+#               Avoir une liste de conditons à affecter à une variable d'attente. Comme ça dès qu'on teste le critère d'un mouvement, on ajoute un test de la variable d'attente.
+#               Lorsqu'aucun enchainement n'est en cours, on met cette variable à "Normal", sinon on la met à "mouvement x en cours".
+
 from pykinect2 import PyKinectV2
 from pykinect2 import PyKinectRuntime
 import cv2
