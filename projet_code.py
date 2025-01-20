@@ -13,7 +13,7 @@ animation_path_wave_right = "./Animations/Animation_vague_droite.mp4"
 animation_path_aura = "./Animations/aura 2.mp4"
 animation_path_rocher = "./Animations/Rocher.mp4"
 animation_path_soulevement = ".\Animations\Animation_soulevement.mp4"
-animation_path_feu = ".\Animations\Animation_feu.mp4"
+animation_path_feu = ".\Animations\feu.mp4"
 
 fps = 16 # J'ai 10 images par seconde dans l'animation
 delay = int(1000/fps)
