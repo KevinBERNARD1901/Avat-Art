@@ -10,7 +10,7 @@ import math
 # Paramètres des animations
 animation_path_wave = "./Animations/Animation_vague_gauche.mp4"
 animation_path_wave_right = "./Animations/Animation_vague_droite.mp4"
-animation_path_aura = "./Animations/aura 2.mp4"
+animation_path_aura = "./Animations/Aura_V3.mp4"
 animation_path_rocher = "./Animations/Rocher.mp4"
 animation_path_soulevement = ".\Animations\Animation_soulevement.mp4"
 animation_path_feu = ".\Animations\feu.mp4"
