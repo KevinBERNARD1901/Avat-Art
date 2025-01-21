@@ -57,6 +57,13 @@ def min(x,y):
         return x
     else :
         return y  
+
+def max_liste(L):
+    res=0
+    for x in l:
+        if x> res :
+            res = X
+    return res
       
 # Fonction pour l'animation du coup de pied donne vague   
 def animation_coup(animation_path):#path en argument
@@ -136,55 +143,72 @@ while running_loop:
                 
                 #Test coup de poing droit
                 if attente != True and liste_position[indice_epaule_droite][1] < liste_position[indice_poing_droit][1] < liste_position[indice_tete][1]  and liste_position[indice_coude_droit][1] > liste_position[indice_epaule_droite][1] and liste_position[indice_poing_droit][0] > liste_position[indice_coude_droit][0]:
-                    t1=time.time()                    
+                                        
                     print("coup de poing feu")
-                    attente = 0.1
+                    temps_boucle = 0.3
+                    X = []
+                    Y = []
+                    D = [] # Distance
+                    V = [] # Vitesse
+                    A = [] # Accélération
+                    
+                    delta_X = []
+                    delta_Y = []
+                    delta_V = []
+                    
+                    t_vitesse = 0
+                    compteur_frame = 0
+                    
+                    t1 = time.time()
+                    t2 = time.time()
+                    
+                    while t2-t1 < temps_boucle:
+                        compteur_frame+=1
+                        t2=time.time()
+                        
+                        if compteur_frame == 4:
+                            t_vitesse = t2-t1                            
+                            
+                        bodies_int = kinect.get_last_body_frame()
+                        if bodies_int != None:
+                            for i in range(0, kinect.max_body_count):
+                                body_int = bodies_int.bodies[i]
+                                if not body_int.is_tracked:
+                                    continue
+                                joints_int = body_int.joints
+                        X += [joints_int[indice_poing_droit].Position.x]
+                        Y += [joints_int[indice_poing_droit].Position.y]
+                    l = len(X) # Longueur de la liste
+                    
+                    for i in range(3,l,4):
+                        delta_X+=[abs(X[i]-X[i-3])]
+                        delta_Y+=[abs(Y[i]-Y[i-3])]
+                    
+                    for i in len(delta_X) :
+                        D.append(math.sqrt(delta_X[i]**2 + delat_Y[i]**2))
+                    
+                    for i in D:
+                        i = i/t_vitesse
+                    
+                    for i in range(1,len(V),2):
+                        delta_V.append(abs(V[i]-V[i-1]))
+                    
+                    for v in delta_V:
+                        A.append(v/(2*t_vitesse))
+                    
+                    print(max_liste(A))
+                    
+                    
+                    
+                    
                     # Détection de l'intensité
                         # Nouvelle frame
-                    time.sleep(attente)
-                    bodies_2 = kinect.get_last_body_frame()
-                    if bodies_2 != None:
-                        for i in range(0, kinect.max_body_count):
-                            body_2 = bodies_2.bodies[i]
-                            if not body_2.is_tracked:
-                                continue
-                            joints_2 = body_2.joints
-                    t2 = time.time()
-
-                    bodies_3 = kinect.get_last_body_frame()
-                    if bodies_3 != None:
-                        for i in range(0, kinect.max_body_count):
-                            body_3 = bodies_3.bodies[i]
-                            if not body_3.is_tracked:
-                                continue
-                            joints_3 = body_3.joints
-                    t3=time.time()
                     
-                    time.sleep(attente)
-                    bodies_4 = kinect.get_last_body_frame()
-                    if bodies_4 != None:
-                        for i in range(0, kinect.max_body_count):
-                            body_4 = bodies_4.bodies[i]
-                            if not body_4.is_tracked:
-                                continue
-                            joints_4 = body_4.joints
-                    t4=time.time()
-                      
-                        # Position main droite
-                    delta_x_1 = abs(joints[indice_poing_droit].Position.x - joints_2[indice_poing_droit].Position.x)
-                    delta_y_1 = abs(joints[indice_poing_droit].Position.y - joints_2[indice_poing_droit].Position.y)
-                    distance_1 = math.sqrt(delta_x_1**2 + delta_y_1**2)
-                    vitesse_1 = distance_1 / (t2-t1)
-                    print("vitesse 1: ", vitesse_1)
-                    delta_x_2 = abs(joints_3[indice_poing_droit].Position.x - joints_4[indice_poing_droit].Position.x)
-                    delta_y_2 = abs(joints_3[indice_poing_droit].Position.y - joints_4[indice_poing_droit].Position.y)
-                    distance_2 = math.sqrt(delta_x_2**2 + delta_y_2**2)
-                    vitesse_2 = distance_2 / (t4-t3)
                     
-                    print("vitesse 2 : ", vitesse_2)
-                    acceleration = abs(vitesse_2-vitesse_1)/(t4-t1)
-                    print("accélération :", acceleration)
-                            
+                    
+                    
+                    
+                    
                     
                     # Lancement de l'animation                    
                     animation_coup(animation_path_feu)

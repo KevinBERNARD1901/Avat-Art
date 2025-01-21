@@ -1,19 +1,19 @@
-# Idée gestion des enchainemnts
-#               Avoir une liste de conditons à affecter à une variable d'attente. Comme ça dès qu'on teste le critère d'un mouvement, on ajoute un test de la variable d'attente.
-#               Lorsqu'aucun enchainement n'est en cours, on met cette variable à "Normal", sinon on la met à "mouvement x en cours".
-
 from pykinect2 import PyKinectV2
 from pykinect2 import PyKinectRuntime
 import cv2
 import pygame
 import openpyxl
 import time
+import math
 # import numpy as np
 
 # Paramètres des animations
 animation_path_wave = "./Animations/Animation_vague_gauche.mp4"
 animation_path_wave_right = "./Animations/Animation_vague_droite.mp4"
-
+animation_path_aura = "./Animations/aura 2.mp4"
+animation_path_rocher = "./Animations/Rocher.mp4"
+animation_path_soulevement = ".\Animations\Animation_soulevement.mp4"
+animation_path_feu = ".\Animations\Animation_feu.mp4"
 
 fps = 16 # J'ai 10 images par seconde dans l'animation
 delay = int(1000/fps)
@@ -44,6 +44,19 @@ def draw_body(screen, joints):
         if z > 0:
             x, y = int(x * 100 + width // 2), int(-y * 100 + height // 2)
             pygame.draw.circle(screen, (255, 0, 0), (x, y), 5)
+
+# Fonction max
+def max(x,y):
+    if x>y :
+        return x
+    else :
+        return y
+
+def min(x,y):
+    if x<y :
+        return x
+    else :
+        return y  
       
 # Fonction pour l'animation du coup de pied donne vague   
 def animation_coup(animation_path):#path en argument
@@ -71,6 +84,7 @@ def animation_coup(animation_path):#path en argument
 running_loop = True
 running_animation = False
 liste_position=[]
+attente = False
 
 while running_loop:
     for event in pygame.event.get():
@@ -97,33 +111,103 @@ while running_loop:
                 indice_tete = 3
                 indice_poing_droit = 11
                 indice_poing_gauche = 7
+                indice_hanche_droite = 16
+                indice_hanche_gauche = 12
+                indice_milieu_colonne = 1
+                indice_hanche = 0
+                
+                liste_position=[]
                 
                 # Récupération des positions
                 for i in range(25):
                     liste_position.append([joints[i].Position.x, joints[i].Position.y, joints[i].Position.z])
-
-                # Calcul de seuil
-                seuil = abs(y_cou-y_tete)*0.1/1.16
                 
                 # Test de comparaison coup de pied droit
-                if liste_position[indice_pied_droit[1]] > liste_position[indice_genou_gauche[1]] : 
+                if attente != True and liste_position[indice_pied_droit][1] > liste_position[indice_genou_gauche][1] : 
                     print("Pied droit plus haut que genou gauche")
                     animation_coup(animation_path_wave)
                     # running_loop = False
                     
                 # Test de comparaison coup de pied gauche 
-                if liste_position[indice_pied_gauche[1]]> liste_position[indice_genou_droit[1]] : 
+                if attente != True and liste_position[indice_pied_gauche][1]> liste_position[indice_genou_droit][1] : 
                     print("Pied gauche plus haut que genou droit")
                     animation_coup(animation_path_wave_right)
                     # running_loop = False
                 
                 #Test coup de poing droit
-                if liste_position[indice_epaule_droite[1]] < liste_position[indice_poing_droit[1]] < liste_position[indice_tete[1]] and liste_position[indice_coude_droit[1]] > liste_position[indice_epaule_droite[1]] and liste_position[indice_poing_droit[0]] > liste_position[indice_coude_droit[0]]:
-                    print("coup de poing droit")
-                    animation_coup(animation_path_aura)
+                if attente != True and liste_position[indice_epaule_droite][1] < liste_position[indice_poing_droit][1] < liste_position[indice_tete][1]  and liste_position[indice_coude_droit][1] > liste_position[indice_epaule_droite][1] and liste_position[indice_poing_droit][0] > liste_position[indice_coude_droit][0]:
+                    t1=time.time()                    
+                    print("coup de poing feu")
+                    attente = 0.1
+                    # Détection de l'intensité
+                        # Nouvelle frame
+                    time.sleep(attente)
+                    bodies_2 = kinect.get_last_body_frame()
+                    if bodies_2 != None:
+                        for i in range(0, kinect.max_body_count):
+                            body_2 = bodies_2.bodies[i]
+                            if not body_2.is_tracked:
+                                continue
+                            joints_2 = body_2.joints
+                    t2 = time.time()
+
+                    bodies_3 = kinect.get_last_body_frame()
+                    if bodies_3 != None:
+                        for i in range(0, kinect.max_body_count):
+                            body_3 = bodies_3.bodies[i]
+                            if not body_3.is_tracked:
+                                continue
+                            joints_3 = body_3.joints
+                    t3=time.time()
+                    
+                    time.sleep(attente)
+                    bodies_4 = kinect.get_last_body_frame()
+                    if bodies_4 != None:
+                        for i in range(0, kinect.max_body_count):
+                            body_4 = bodies_4.bodies[i]
+                            if not body_4.is_tracked:
+                                continue
+                            joints_4 = body_4.joints
+                    t4=time.time()
+                      
+                        # Position main droite
+                    delta_x_1 = abs(joints[indice_poing_droit].Position.x - joints_2[indice_poing_droit].Position.x)
+                    delta_y_1 = abs(joints[indice_poing_droit].Position.y - joints_2[indice_poing_droit].Position.y)
+                    distance_1 = math.sqrt(delta_x_1**2 + delta_y_1**2)
+                    vitesse_1 = distance_1 / (t2-t1)
+                    print("vitesse 1: ", vitesse_1)
+                    delta_x_2 = abs(joints_3[indice_poing_droit].Position.x - joints_4[indice_poing_droit].Position.x)
+                    delta_y_2 = abs(joints_3[indice_poing_droit].Position.y - joints_4[indice_poing_droit].Position.y)
+                    distance_2 = math.sqrt(delta_x_2**2 + delta_y_2**2)
+                    vitesse_2 = distance_2 / (t4-t3)
+                    
+                    print("vitesse 2 : ", vitesse_2)
+                    acceleration = abs(vitesse_2-vitesse_1)/(t4-t1)
+                    print("accélération :", acceleration)
+                            
+                    
+                    # Lancement de l'animation                    
+                    animation_coup(animation_path_feu)
                     # running_loop = False
                 
-                #Test aura d'énergie
+                #Test soulèvement
+                if attente != True and liste_position[indice_poing_droit][1] < max(liste_position[indice_genou_droit][1],liste_position[indice_genou_gauche][1]) and liste_position[indice_poing_gauche][1] > liste_position[indice_tete][1]:
+                    print("Soulèvement")
+                    animation_coup(animation_path_soulevement)
+                    attente = True
+                        
+                #Test coup de poing terre
+                if attente == True and liste_position[indice_epaule_droite][1] < liste_position[indice_poing_droit][1] < liste_position[indice_tete][1]  and liste_position[indice_coude_droit][1] > liste_position[indice_epaule_droite][1] and liste_position[indice_poing_droit][0] > liste_position[indice_coude_droit][0]:
+                    print("tete vers droite")
+                    animation_coup(animation_path_rocher)
+                    attente = False
+                
+                #Test aura + fin
+                if attente != True and body.hand_right_state == PyKinectV2.HandState_Closed and body.hand_left_state == PyKinectV2.HandState_Closed and min(liste_position[indice_poing_droit][1],liste_position[indice_poing_gauche][1])>liste_position[indice_tete][1]:
+                    print("aura + fin")
+                    animation_coup(animation_path_aura)
+                    running_loop=False
+                    input() #Faire alt+échap puis entrer quelque chose dans le terminal
                 
                     
 
@@ -144,9 +228,6 @@ while running_loop:
 # Nettoyer
 pygame.quit()
 kinect.close()
-
-
-
 # # Test
 # import sys
 # from pykinect2 import PyKinectV2, PyKinectRuntime
