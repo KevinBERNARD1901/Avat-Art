@@ -59,7 +59,7 @@ def min(x,y):
         return y  
       
 # Fonction pour l'animation du coup de pied donne vague   
-def animation_coup(animation_path):#path en argument
+def animation_coup(animation_path) :#path en argument
     cap = cv2.VideoCapture(animation_path)
     if not cap.isOpened():
         raise Exception("ERROR: Video could not be opened")
