@@ -18,7 +18,7 @@ animation_path_feu_gauche = "./Animations/Animation_Feu_Gauche.mp4"
 animation_path_soulevement = "./Animations/Animation_soulevement.mp4"
 animation_path_rocher_droite = "./Animations/Animation_Rocher_Droite.mp4"
 animation_path_rocher_gauche = "./Animations/Animation_Rocher_Gauche.mp4"
-animation_path_ouverture = "./Animations/Ouverture_Avat'Art.mp4"
+animation_path_ouverture = "./Animations/Ouverture_Avat'Art_sound.mp4"
 
 fps = 16 # J'ai 10 images par seconde dans l'animation
 delay = int(1000/fps)
