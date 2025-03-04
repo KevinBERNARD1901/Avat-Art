@@ -300,8 +300,6 @@ def detection_par_acceleration() :
                         animation_coup(animation_path_aura)
                         running_loop=False
                         input() #Faire alt+échap puis entrer quelque chose dans le terminal
-                    
-                        
 
             if kinect.has_new_color_frame():
                 frame = kinect.get_last_color_frame()
